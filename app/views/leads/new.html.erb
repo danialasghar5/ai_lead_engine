@@ -1,6 +1,6 @@
-<h1>Submit a Lead</h1>
-
-<%= form_with model: @lead, local: true do |f| %>
+<%= turbo_frame_tag "new_lead" do %>
+  <h2>Submit a Lead</h2>
+  <%= form_with model: @lead do |f| %>
   <div class="mb-3">
     <%= f.label :name %>
     <%= f.text_field :name, class: "form-control" %>
@@ -17,4 +17,5 @@
   </div>
 
   <%= f.submit "Submit Lead", class: "btn btn-primary" %>
+  <% end %>
 <% end %>

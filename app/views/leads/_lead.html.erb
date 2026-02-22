@@ -1,16 +1,21 @@
-<div id="lead_<%= lead.id %>" class="card mb-2 p-3">
-  <strong>Name:</strong> <%= lead.name %><br>
-  <strong>Email:</strong> <%= lead.email %><br>
-  <strong>Message:</strong> <%= lead.message %><br>
+<div id="<%= dom_id(lead) %>" class="card mb-2 p-3">
+  <div class="d-flex justify-content-between">
+    <div>
+      <strong><%= lead.name %></strong> (<%= lead.email %>)
+      <p><%= lead.message %></p>
+    </div>
+    <div>
+      <span class="badge <%= lead.ai_status == 'completed' ? 'bg-success' : lead.ai_status == 'failed' ? 'bg-danger' : 'bg-secondary' %>">
+        <%= lead.ai_status.capitalize %>
+      </span>
+    </div>
+  </div>
 
-  <% if lead.ai_status == "completed" %>
-    <strong>Summary:</strong> <%= lead.summary %><br>
-    <strong>Intent:</strong> <%= lead.intent %><br>
-    <strong>Urgency:</strong> <%= lead.urgency %><br>
-    <strong>Score:</strong> <%= lead.lead_score %>
-  <% elsif lead.ai_status == "failed" %>
-    <em>AI analysis failed</em>
-  <% else %>
-    <em>Analyzing...</em>
+  <% if lead.summary.present? %>
+    <hr>
+    <p><strong>Summary:</strong> <%= lead.summary %></p>
+    <p><strong>Intent:</strong> <%= lead.intent %></p>
+    <p><strong>Urgency:</strong> <%= lead.urgency %></p>
+    <p><strong>Lead Score:</strong> <%= lead.lead_score %></p>
   <% end %>
 </div>

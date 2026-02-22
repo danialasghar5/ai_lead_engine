@@ -19,12 +19,5 @@ class AnalyzeLeadJob < ApplicationJob
       lead.update(ai_status: "failed")
     end
 
-    # Broadcast update
-    Turbo::StreamsChannel.broadcast_update_to(
-      "leads",
-      target: "lead_#{lead.id}",
-      partial: "leads/lead",
-      locals: { lead: lead }
-    )
   end
 end

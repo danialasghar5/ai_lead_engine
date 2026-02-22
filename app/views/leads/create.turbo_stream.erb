@@ -1,0 +1,7 @@
+<%= turbo_stream.prepend "leads", @lead %>
+
+<%= turbo_stream.replace "new_lead" do %>
+  <%= turbo_frame_tag "new_lead" do %>
+    <%= link_to "New Lead", new_lead_path, class: "btn btn-primary mb-3" %>
+  <% end %>
+<% end %>
