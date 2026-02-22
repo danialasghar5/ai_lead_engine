@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  email: MyString
+  message: MyText
+  summary: MyText
+  intent: MyString
+  urgency: MyString
+  lead_score: 1
+  ai_status: MyString
+
+two:
+  name: MyString
+  email: MyString
+  message: MyText
+  summary: MyText
+  intent: MyString
+  urgency: MyString
+  lead_score: 1
+  ai_status: MyString
