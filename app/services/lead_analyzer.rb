@@ -4,10 +4,10 @@ class LeadAnalyzer
   end
 
   def call
-    response = client.chat(
-      parameters: {
-        model: "gpt-4o-mini",
-        messages: messages,
+    response = client.complete(
+      messages,
+      model: Rails.application.config.x.openrouter.model,
+      extras: {
         temperature: 0.2,
         response_format: { type: "json_object" }
       }
@@ -22,9 +22,7 @@ class LeadAnalyzer
   private
 
   def client
-    @client ||= OpenAI::Client.new(
-      access_token: Rails.application.credentials.dig(:openai, :api_key)
-    )
+    @client ||= OpenRouter::Client.new
   end
 
   def messages
