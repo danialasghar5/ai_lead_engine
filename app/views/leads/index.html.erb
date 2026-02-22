@@ -1,2 +1,9 @@
-<h1>Leads#index</h1>
-<p>Find me in app/views/leads/index.html.erb</p>
+<h1>Leads</h1>
+
+<%= link_to "New Lead", new_lead_path, class: "btn btn-primary mb-3" %>
+
+<%= turbo_stream_from "leads" %>
+
+<div id="leads">
+  <%= render @leads %>
+</div>

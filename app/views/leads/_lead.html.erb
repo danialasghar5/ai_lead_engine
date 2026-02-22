@@ -1,0 +1,16 @@
+<div id="lead_<%= lead.id %>" class="card mb-2 p-3">
+  <strong>Name:</strong> <%= lead.name %><br>
+  <strong>Email:</strong> <%= lead.email %><br>
+  <strong>Message:</strong> <%= lead.message %><br>
+
+  <% if lead.ai_status == "completed" %>
+    <strong>Summary:</strong> <%= lead.summary %><br>
+    <strong>Intent:</strong> <%= lead.intent %><br>
+    <strong>Urgency:</strong> <%= lead.urgency %><br>
+    <strong>Score:</strong> <%= lead.lead_score %>
+  <% elsif lead.ai_status == "failed" %>
+    <em>AI analysis failed</em>
+  <% else %>
+    <em>Analyzing...</em>
+  <% end %>
+</div>

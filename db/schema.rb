@@ -15,7 +15,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_182147) do
   enable_extension "pg_catalog.plpgsql"
 
   create_table "leads", force: :cascade do |t|
-    t.string "ai_status", default: "pending"
+    t.integer "ai_status", default: 0
     t.datetime "created_at", null: false
     t.string "email"
     t.string "intent"

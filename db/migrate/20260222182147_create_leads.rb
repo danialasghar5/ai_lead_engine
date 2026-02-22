@@ -8,7 +8,7 @@ class CreateLeads < ActiveRecord::Migration[8.1]
       t.string :intent
       t.string :urgency
       t.integer :lead_score
-      t.string :ai_status, default: "pending"
+      t.integer :ai_status, default: 0
 
       t.timestamps
     end
