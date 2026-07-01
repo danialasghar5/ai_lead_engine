@@ -1,11 +1,16 @@
 # AI Lead Engine
 
-**A production-grade lead qualification pipeline that ingests, scores, and routes inbound business leads in real-time.**
+A real-time backend system for AI-powered lead qualification in SaaS workflows
 
 [![Rails](https://img.shields.io/badge/Rails-8.1-red.svg)](https://rubyonrails.org)
 [![Ruby](https://img.shields.io/badge/Ruby-3.4-blue.svg)](https://www.ruby-lang.org)
 [![Turbo](https://img.shields.io/badge/Hotwire-Turbo%20Streams-8A2BE2)](https://hotwired.dev)
 [![OpenRouter](https://img.shields.io/badge/LLM-OpenRouter-orange)](https://openrouter.ai)
+
+---
+
+## What this is
+A Rails-based backend system that processes inbound leads asynchronously and enriches them using LLM-based classification.
 
 ---
 
@@ -92,7 +97,7 @@ flowchart TD
 
 ---
 
-## Production Resiliency & Hardening
+## Resiliency & Hardening
 
 * **Error Handling:** Employs exponential backoff retries for transient upstream failures (`HTTP 429` and `HTTP 5xx`).
 * **Concurrency Throttling:** Queue execution limits throttle outbound LLM requests to avoid hitting rate limits.
@@ -148,9 +153,6 @@ bin/rails test
 
 ### UI Dashboard Overview
 ![UI Dashboard Overview](./public/screenshots/dashboard_placeholder.png)
-
-### AI Structured Output Detail
-![AI Structured Output Detail](./public/screenshots/lead_analysis_placeholder.png)
 
 ---
 
