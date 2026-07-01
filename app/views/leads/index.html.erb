@@ -1,11 +1,19 @@
-<h1>Leads</h1>
-
-<%= turbo_frame_tag "new_lead" do %>
-  <%= link_to "New Lead", new_lead_path, class: "btn btn-primary mb-3" %>
-<% end %>
+<div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom">
+  <div>
+    <h1 class="fw-bold text-dark mb-1">AI Lead Dashboard</h1>
+    <p class="text-muted mb-0" style="font-size: 0.95rem;">Monitor, qualify, and score incoming business leads in real-time.</p>
+  </div>
+  <div>
+    <%= turbo_frame_tag "new_lead" do %>
+      <%= link_to "New Lead", new_lead_path, class: "btn btn-primary px-4 py-2 fw-semibold rounded-3 shadow-sm" %>
+    <% end %>
+  </div>
+</div>
 
 <%= turbo_stream_from "leads" %>
 
-<div id="leads">
-  <%= render @leads %>
+<div id="leads" class="row">
+  <div class="col-12 col-xl-10 mx-auto">
+    <%= render @leads %>
+  </div>
 </div>
