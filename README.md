@@ -1,78 +1,148 @@
 # AI Lead Engine
 
-AI Lead Engine is a Rails 8 application designed to automatically ingest, process, and qualify inbound business leads asynchronously via [OpenRouter](https://openrouter.ai/). 
+**A production-grade lead qualification pipeline that ingests, scores, and routes inbound business leads in real-time.**
 
-When a lead is submitted, text analysis is offloaded to a background job that parses the message to extract intent category, urgency level, and a qualification score. Once processed by OpenRouter's LLM backend, the results are broadcasted in real-time to the dashboard using Hotwire/Turbo Streams without requiring a page refresh.
+[![Rails](https://img.shields.io/badge/Rails-8.1-red.svg)](https://rubyonrails.org)
+[![Ruby](https://img.shields.io/badge/Ruby-3.4-blue.svg)](https://www.ruby-lang.org)
+[![Turbo](https://img.shields.io/badge/Hotwire-Turbo%20Streams-8A2BE2)](https://hotwired.dev)
+[![OpenRouter](https://img.shields.io/badge/LLM-OpenRouter-orange)](https://openrouter.ai)
 
-## Project Context
+---
 
-In high-velocity B2B environments, response time directly impacts conversion rates. Standard CRM funnels often delay engagement due to manual lead triage. This project implements a decoupled, production-grade inbound pipeline designed to ingest, score, and qualify leads within seconds of submission, enabling instant routing.
+## Overview
 
-## Business Value
+### The Problem
+Inbound B2B lead value decays rapidly. Most CRM setups leave submissions unassigned in queues waiting for manual triage, increasing Lead Response Time (LRT) and lowering conversion rates.
 
-* **Automated Qualification:** Filters out low-intent noise and highlights high-value enterprise targets without manual intervention, accelerating sales cycle velocity.
-* **Minimized Lead Response Time (LRT):** Drastically reduces the time between lead submission and sales outreach, directly improving conversion rates.
-* **Resource Efficiency:** Eliminates manual triage bottlenecks, ensuring consistent categorization and scoring even during high-traffic spikes.
+### The Solution
+AI Lead Engine automates lead triage. It offloads raw submission text to a background worker, classifies intent, scores the lead (1-10), writes a structured summary, and streams updates instantly to the user's dashboard over WebSockets.
+
+---
 
 ## System Flow
 
 ```mermaid
 flowchart TD
-    User([User]) -->|Submits Lead Form| Controller[Rails Controller]
-    Controller -->|Creates Record with 'pending' status| DB[(Database)]
-    Controller -->|Enqueues Job| Job[Background Job: Solid Queue]
-    Job -->|Requests analysis| OpenRouter[AI Service: OpenRouter]
-    OpenRouter -->|Returns Structured JSON| Job
-    Job -->|Updates status to 'completed' & saves analysis| DB
-    Job -->|Broadcasts updates via ActionCable| Turbo[Turbo Streams]
-    Turbo -->|Pushes real-time updates| UI[UI Update]
+    User([Inbound Lead]) -->|Submits Form| Controller[Rails Controller]
+    Controller -->|Persists as 'pending'| DB[(PostgreSQL)]
+    Controller -->|Enqueues Job| Job[AnalyzeLeadJob · Solid Queue]
+    Job -->|Requests Analysis| OR[OpenRouter API]
+    OR -->|Structured JSON| Job
+    Job -->|Writes Intent, Score, Summary| DB
+    Job -->|Broadcasts Update| Turbo[Turbo Streams / ActionCable]
+    Turbo -->|Pushes State Live| UI[Dashboard]
 ```
+
+*By separating ingestion from processing, database writes are fast and immune to upstream LLM latency.*
+
+---
 
 ## Real Example Output
 
-### Sample Form Submission Input
+### Inbound Form Submission
 ```json
 {
   "name": "Sarah Jenkins",
   "email": "sarah.jenkins@enterprise-corp.com",
   "company": "EnterpriseCorp",
   "company_size": "2,500+",
-  "message": "Hi, we are currently migrating our legacy infrastructure to AWS and need a secure API gateway partner. We have a budget of $50k/year allocated for this and want to start a POC by next Monday. Please have an enterprise architect call me ASAP at 555-0199."
+  "message": "We're migrating legacy infra to AWS and need a secure API gateway partner. $50k/year budget, want a POC by next Monday. Please have an enterprise architect call me ASAP."
 }
 ```
 
-### AI Analysis Output
+### AI Structured Qualification
 ```json
 {
-  "summary": "Enterprise customer migrating legacy infrastructure to AWS. Needs a secure API gateway. Active budget of $50k/yr, urgent POC start by next Monday, requested phone call from an enterprise architect ASAP.",
+  "summary": "Enterprise lead migrating to AWS, needs a secure API gateway. $50k/yr budget, POC by next Monday, requesting an architect call ASAP.",
   "intent": "hot",
   "score": 95
 }
 ```
 
-## System Design Highlights
+---
 
-* **Asynchronous Execution:** Heavy external API requests are offloaded to `Solid Queue` (Rails' default DB-backed ActiveJob), ensuring HTTP requests remain fast and immune to LLM latency or external downtime.
-* **Clean Architecture & Separation of Concerns:**
-  - **Service Object (`LeadAnalyzerService`):** Capsule for calling the OpenRouter API, handling formatting, and structured JSON parsing.
-  - **ActiveJob (`AnalyzeLeadJob`):** Manages background serialization, state updates, and transactional persistence.
-  - **Model Layer (`Lead`):** Manages database state, schemas, and lifecycle validation.
-* **Real-time Reactive UI:** Employs Hotwire (Turbo Streams) to push live updates to the client dashboard as soon as the background analysis completes.
+## Tech Stack & Architecture
 
-## Production Readiness & Resiliency
+- **Framework:** Ruby on Rails 8
+- **Background Jobs:** Solid Queue (Postgres-backed ActiveJob, eliminating Redis dependencies)
+- **AI Gateway:** OpenRouter via `open_router` gem (Model-agnostic; default is `openai/gpt-4o-mini`)
+- **Real-Time UI:** Hotwire & Turbo Streams over ActionCable (Persistent WebSockets)
+- **CSS Framework:** Bootstrap 5 with Importmaps (Zero-Node build step)
+- **Testing:** Dual suite support using RSpec (Unit & System) and Minitest (Integration)
 
-* **Robust Error Handling & Retries:** Implements automatic retries with exponential backoff to handle transient upstream errors (`5xx`) or temporary rate-limiting (`429`).
-* **Queue Throttling:** Configured concurrency limits on the ActiveJob queue prevent overwhelming third-party API rate limits during traffic bursts.
-* **Request-Level Cost Control:** Input tokens are constrained through length validation, and system prompts enforce deterministic, low-token responses.
-* **Idempotency & State Tracking:** Tracks lead states via atomic database transactions and status markers (`pending`, `analyzing`, `completed`, `failed`), preventing duplicate AI processing on retried jobs.
+---
 
-## Tech Stack
+## Architectural Decisions & Tradeoffs
 
-- **Ruby on Rails 8**: Core MVC framework.
-- **OpenRouter (`open_router` gem)**: Agnostic LLM gateway interface for flexible model swapping.
-- **Turbo Streams**: WebSockets-based real-time frontend updates.
-- **Solid Queue**: Database-backed ActiveJob queue adapter.
-- **Bootstrap 5 & Importmaps**: Modern, lightweight CSS styling without Node.js tooling dependencies.
+### 1. Reactive Push vs. Pull
+* **Decision:** Push updates to the UI immediately via Turbo Streams over ActionCable WebSockets.
+* **Tradeoff:** Increases server memory usage for concurrent WebSockets connections. This is justified because instant visibility on hot leads directly impacts revenue.
+
+### 2. Solid Queue vs. Redis-Backed Sidekiq
+* **Decision:** Use Rails 8's database-backed Solid Queue engine.
+* **Tradeoff:** Lower maximum job throughput compared to Redis. However, it simplifies the hosting footprint (one less service to monitor), which is ideal since lead ingestion volume rarely hits database write ceilings.
+
+### 3. Model-Agnostic Routing vs. Vendor SDKs
+* **Decision:** OpenRouter integration using `OPENROUTER_MODEL`.
+* **Tradeoff:** Dependency on an external router. The benefit is flexibility: models can be swapped (e.g., to minimize latency or cost) without modifying application code.
+
+### 4. Idempotent State Machine
+* **Decision:** Leads transit through an atomic database enum state (`pending` → `completed` / `failed`).
+* **Tradeoff:** Slight database overhead for status updates. This prevents duplicate API calls and double-billing on retry cycles.
+
+---
+
+## Production Resiliency & Hardening
+
+* **Error Handling:** Employs exponential backoff retries for transient upstream failures (`HTTP 429` and `HTTP 5xx`).
+* **Concurrency Throttling:** Queue execution limits throttle outbound LLM requests to avoid hitting rate limits.
+* **Cost Controls:** Enforces input length validations and strict system prompts to limit maximum token usage.
+* **Observability:** Traceable status states are logged inside transactions. At scale, this would be updated to log correlation IDs and token usage metrics.
+
+---
+
+## Getting Started
+
+### Installation & Run
+
+1. **Install dependencies:**
+   ```bash
+   bundle install
+   ```
+
+2. **Run migrations & setup database:**
+   ```bash
+   rails db:prepare
+   ```
+
+3. **Configure API credentials:**
+   ```bash
+   export OPENROUTER_API_KEY='sk-or-v1-...'
+   export OPENROUTER_MODEL='openai/gpt-4o-mini'
+   ```
+
+4. **Boot the server:**
+   ```bash
+   bin/rails server
+   ```
+
+5. **Access the application:**
+   Visit `http://localhost:3000/leads` to submit and monitor leads in real-time.
+
+### Running the Test Suite
+
+```bash
+# Prepare the database
+bin/rails db:test:prepare
+
+# Run unit and system specs
+bundle exec rspec
+
+# Run integration tests
+bin/rails test
+```
+
+---
 
 ## Screenshots
 
@@ -82,67 +152,11 @@ flowchart TD
 ### AI Structured Output Detail
 ![AI Structured Output Detail](public/screenshots/lead_analysis_placeholder.png)
 
-## Setup & Configuration
+---
 
-### Prerequisites
-- **Ruby 3.4+**
-- **PostgreSQL** or equivalent default DB configured
-- OpenRouter API Key
+## Roadmap
 
-### Installation
-
-1. Clone the repository and install dependencies:
-   ```bash
-   bundle install
-   ```
-
-2. Setup your database:
-   ```bash
-   rails db:prepare
-   ```
-
-### API Keys
-
-You must configure OpenRouter to analyze leads. Set up your OpenRouter API credentials using standard environment variables:
-
-```bash
-export OPENROUTER_API_KEY='sk-or-v1-...'
-```
-
-*(Alternatively, you can add this securely inside your `credentials.yml.enc` file under `openrouter: api_key`)*
-
-You can optionally configure which model OpenRouter resolves to by setting the `OPENROUTER_MODEL` variable:
-```bash
-export OPENROUTER_MODEL='openai/gpt-4o-mini'
-```
-
-### Running the application
-
-1. Start your background worker and rails server using your preferred process manager (e.g. `bin/dev` or using `foreman` with the Procfile if you have one, or just the unified rails server):
-   ```bash
-   bin/rails server
-   ```
-   *(Ensure your background job processor is functioning so that `AnalyzeLeadJob` can execute!)*
-
-2. Open `localhost:3000/leads`
-3. Click **"New Lead"** and submit dummy lead information (e.g., "I need urgent digital marketing help!").
-4. Watch the list update asynchronously as the lead begins in an *Analyzing...* state, before snapping to the fully analyzed metrics retrieved from the AI model!
-
-### Running the tests
-
-This project includes dual-test coverage using both **Minitest** (default integration tests) and **RSpec** (unit and system specifications).
-
-To initialize the test database schema:
-```bash
-bin/rails db:test:prepare
-```
-
-To execute the RSpec suite:
-```bash
-bundle exec rspec
-```
-
-To execute the Minitest suite:
-```bash
-bin/rails test
-```
+- [ ] **CRM Sync:** Direct push connectors for Salesforce and HubSpot.
+- [ ] **Upstream Fallback:** Auto-routing to secondary LLM endpoints on API error.
+- [ ] **Multi-Tenancy:** Scoped dashboards and model configuration for multiple teams.
+- [ ] **Prompt Optimization:** Feedback loop to refine prompts based on sales close rates.
