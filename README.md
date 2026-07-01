@@ -147,10 +147,10 @@ bin/rails test
 ## Screenshots
 
 ### UI Dashboard Overview
-![UI Dashboard Overview](public/screenshots/dashboard_placeholder.png)
+![UI Dashboard Overview](./public/screenshots/dashboard_placeholder.png)
 
 ### AI Structured Output Detail
-![AI Structured Output Detail](public/screenshots/lead_analysis_placeholder.png)
+![AI Structured Output Detail](./public/screenshots/lead_analysis_placeholder.png)
 
 ---
 
