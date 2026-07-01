@@ -8,7 +8,7 @@ one:
   intent: MyString
   urgency: MyString
   lead_score: 1
-  ai_status: MyString
+  ai_status: pending
 
 two:
   name: MyString
@@ -18,4 +18,4 @@ two:
   intent: MyString
   urgency: MyString
   lead_score: 1
-  ai_status: MyString
+  ai_status: completed
