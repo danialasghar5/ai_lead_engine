@@ -127,3 +127,22 @@ export OPENROUTER_MODEL='openai/gpt-4o-mini'
 2. Open `localhost:3000/leads`
 3. Click **"New Lead"** and submit dummy lead information (e.g., "I need urgent digital marketing help!").
 4. Watch the list update asynchronously as the lead begins in an *Analyzing...* state, before snapping to the fully analyzed metrics retrieved from the AI model!
+
+### Running the tests
+
+This project includes dual-test coverage using both **Minitest** (default integration tests) and **RSpec** (unit and system specifications).
+
+To initialize the test database schema:
+```bash
+bin/rails db:test:prepare
+```
+
+To execute the RSpec suite:
+```bash
+bundle exec rspec
+```
+
+To execute the Minitest suite:
+```bash
+bin/rails test
+```
