@@ -77,10 +77,10 @@ flowchart TD
 ## Screenshots
 
 ### UI Dashboard Overview
-![UI Screenshot Placeholder](https://raw.githubusercontent.com/danialasghar5/ai_lead_engine/main/public/screenshots/dashboard_placeholder.png)
+![UI Dashboard Overview](public/screenshots/dashboard_placeholder.png)
 
 ### AI Structured Output Detail
-![AI Output Example Screenshot](https://raw.githubusercontent.com/danialasghar5/ai_lead_engine/main/public/screenshots/lead_analysis_placeholder.png)
+![AI Structured Output Detail](public/screenshots/lead_analysis_placeholder.png)
 
 ## Setup & Configuration
 
