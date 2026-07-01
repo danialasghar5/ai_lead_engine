@@ -147,14 +147,7 @@ bundle exec rspec
 bin/rails test
 ```
 
----
 
-## Screenshots
-
-### UI Dashboard Overview
-![UI Dashboard Overview](./public/screenshots/dashboard_placeholder.png)
-
----
 
 ## Roadmap
 
